@@ -1,0 +1,9 @@
+export interface UserView {
+    firstName:string,
+    lastName:string,
+    email:string,
+    password:string,
+    isAdmin:boolean,
+    lastLogIn: Date | null,
+    errorMessage:string
+}
