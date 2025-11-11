@@ -71,6 +71,61 @@ CartRouter.get("/get-cart-items",AuthUser,async(req:express.Request,res:express.
         const email = req.body.userData?.email;
         let cart:ICart | null = await Cart.findOne({email:email}).lean();
         if(cart) {
+            if(cart.items && cart.items.length > 0) {
+                const validItemIds = cart.items
+                    .map(i => String(i.itemId))
+                    .filter(id => mongoose.Types.ObjectId.isValid(id))
+                    .map(id => new mongoose.Types.ObjectId(id));
+
+                const existingItems = validItemIds.length
+                    ? await Item.find({ _id: { $in: validItemIds } }).lean()
+                    : [];
+
+                const existingMap = new Map(existingItems.map(e => [String(e._id), e]));
+                const existingIdSet = new Set(existingItems.map(e => String(e._id)));
+
+                let toRemove: any[] = [];
+
+                for (const cartItem of cart.items) {
+                    const itemIdStr = String(cartItem.itemId);
+
+                    // ✅ Item missing from DB
+                    if (!existingIdSet.has(itemIdStr)) {
+                        toRemove.push(cartItem);
+                        continue;
+                    }
+
+                    const dbItem = existingMap.get(itemIdStr);
+                    const size = cartItem.selectedSize;
+
+                    // ✅ Size not present OR size stock = 0
+                    if (!dbItem?.size || dbItem.size[size] === undefined || dbItem.size[size] <= 0) {
+                        toRemove.push(cartItem);
+                        continue;
+                    }
+
+                    // ✅ NEW: quantity exceeds available stock
+                    if (cartItem.quantity > dbItem.size[size]) {
+                        toRemove.push(cartItem);
+                        continue;
+                    }
+                }
+
+                if (toRemove.length > 0) {
+                    const pullConditions = toRemove.map(m => ({
+                        itemId: mongoose.Types.ObjectId.isValid(m.itemId)
+                            ? new mongoose.Types.ObjectId(String(m.itemId))
+                            : String(m.itemId)
+                    }));
+
+                    await Cart.updateOne(
+                        { email },
+                        { $pull: { items: { $or: pullConditions } } }
+                    );
+
+                    cart.items = cart.items.filter(i => !toRemove.includes(i));
+                }
+            }
             const cartData:CartView = {
                 email: cart.email,
                 items: cart.items.map(i => ({
