@@ -124,7 +124,7 @@ UserRouter.post("/login",[
                             let token:string = jwt.sign(payLoad,config.CLIENT_SECRET_KEY);
                             user = await User.findOneAndUpdate({email:user.email},{lastLogIn:new Date()});
                             userData = {} as UserView;
-                            res.cookie("token", token, {httpOnly: true,sameSite: 'lax',secure: false,maxAge: 1000 * 60 * 60 * 24 * 7}); 
+                            res.cookie("token", token, {httpOnly: true,sameSite: 'none',secure: true,domain: '.vibrantflight.in',path: '/',maxAge: 1000 * 60 * 60 * 24 * 30,}); 
                             return res.status(200).json(userData);
                         }
                         else {
@@ -190,7 +190,7 @@ UserRouter.get("/orders",AuthUser,async(req:express.Request,res:express.Response
 })
 UserRouter.get("/logout",AuthUser,async(req:express.Request,res:express.Response)=>{
     try {
-        res.clearCookie("token", {httpOnly: true,sameSite: "lax",secure: false});
+        res.clearCookie("token", {httpOnly: true,sameSite: "none",secure: true,domain: ".vibrantflight.in",path: "/",});
         return res.status(200).json({});
     }
     catch(err) {

@@ -42,7 +42,7 @@ const cartItemSchema = new mongoose_1.Schema({
     quantity: { type: Number, required: true, min: 1 }
 });
 const cartSchema = new mongoose_1.Schema({
-    userName: { type: String, required: true },
+    email: { type: String, required: true },
     items: [cartItemSchema]
 });
 exports.default = mongoose_1.default.model("Cart", cartSchema);

@@ -18,7 +18,6 @@ UserRouter.post("/register", [
     (0, express_validator_1.body)("firstName").not().isEmpty().withMessage("First Name can not left empty"),
     (0, express_validator_1.body)("lastName").not().isEmpty().withMessage("Last Name can not left empty"),
     (0, express_validator_1.body)("email").not().isEmpty().withMessage("Email can not left empty"),
-    (0, express_validator_1.body)("userName").not().isEmpty().withMessage("User Name can not left empty"),
     (0, express_validator_1.body)("password").not().isEmpty().withMessage("Password can not left empty"),
     (0, express_validator_1.body)("email").isEmail().withMessage("Invalid Email"),
 ], async (req, res) => {
@@ -26,7 +25,6 @@ UserRouter.post("/register", [
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         email: req.body.email,
-        userName: req.body.userName,
         password: req.body.password,
         isAdmin: false,
         errorMessage: req.body.errorMessage,
@@ -48,12 +46,7 @@ UserRouter.post("/register", [
                 return res.status(400).json(userData);
             }
             else {
-                let user = await User_1.default.findOne({
-                    $or: [
-                        { userName: userData.userName },
-                        { email: userData.email }
-                    ]
-                });
+                let user = await User_1.default.findOne({ email: userData.email });
                 if (user) {
                     userData = {};
                     userData.errorMessage = "user has already registered";
@@ -83,14 +76,13 @@ UserRouter.post("/register", [
     }
 });
 UserRouter.post("/login", [
-    (0, express_validator_1.body)("userName").not().isEmpty().withMessage("User Name can not left empty"),
+    (0, express_validator_1.body)("email").not().isEmpty().withMessage("Email can not left empty"),
     (0, express_validator_1.body)("password").not().isEmpty().withMessage("Password can not left empty"),
 ], async (req, res) => {
     let userData = {
         firstName: "",
         lastName: "",
-        email: "",
-        userName: req.body.userName,
+        email: req.body.email,
         password: req.body.password,
         errorMessage: "",
         isAdmin: false,
@@ -113,7 +105,9 @@ UserRouter.post("/login", [
                 return res.status(400).json(userData);
             }
             else {
-                let user = await User_1.default.findOne({ $or: [{ userName: userData.userName }, { email: userData.userName }] });
+                if (userData.email)
+                    userData.email = userData.email.toLowerCase();
+                let user = await User_1.default.findOne({ email: userData.email });
                 if (user) {
                     if (await bcryptjs_1.default.compare(userData.password, user.password)) {
                         let payLoad = {
@@ -128,9 +122,9 @@ UserRouter.post("/login", [
                         }
                         else if (config_1.default.CLIENT_SECRET_KEY) {
                             let token = jsonwebtoken_1.default.sign(payLoad, config_1.default.CLIENT_SECRET_KEY);
-                            user = await User_1.default.findOneAndUpdate({ userName: user.userName }, { lastLogIn: new Date() });
+                            user = await User_1.default.findOneAndUpdate({ email: user.email }, { lastLogIn: new Date() });
                             userData = {};
-                            res.cookie("token", token, { httpOnly: true, sameSite: 'none', secure: true, domain: '.thegerado.com', path: '/', maxAge: 1000 * 60 * 60 * 24 * 30, });
+                            res.cookie("token", token, { httpOnly: true, sameSite: 'none', secure: true, domain: '.vibrantflight.in', path: '/', maxAge: 1000 * 60 * 60 * 24 * 30, });
                             return res.status(200).json(userData);
                         }
                         else {
@@ -147,7 +141,7 @@ UserRouter.post("/login", [
                 }
                 else {
                     userData = {};
-                    userData.errorMessage = "Username or email dose not exist";
+                    userData.errorMessage = "email dose not exist";
                     return res.status(400).json(userData);
                 }
             }
@@ -169,12 +163,12 @@ UserRouter.get("/me", AuthUser_1.default, async (req, res) => {
 UserRouter.get("/orders", AuthUser_1.default, async (req, res) => {
     try {
         const userData = req.body.userData;
-        const orders = await (await Order_1.default.find({ userName: userData.userName }).lean()).reverse();
+        const orders = await (await Order_1.default.find({ email: userData.email }).lean()).reverse();
         if (!orders || orders.length === 0) {
             return res.status(200).json([]);
         }
         const ordersData = orders.map(order => ({
-            userName: order.userName,
+            email: order.email,
             orderId: order.orderId,
             paymentId: order.paymentId,
             items: order.items.map(item => ({
@@ -183,6 +177,7 @@ UserRouter.get("/orders", AuthUser_1.default, async (req, res) => {
             })),
             amount: order.amount,
             trackingId: order.trackingId,
+            pinCode: order.pinCode,
             status: order.status,
             mobile: order.mobile,
             address: order.address
@@ -195,7 +190,7 @@ UserRouter.get("/orders", AuthUser_1.default, async (req, res) => {
 });
 UserRouter.get("/logout", AuthUser_1.default, async (req, res) => {
     try {
-        res.clearCookie("token", { httpOnly: true, sameSite: "none", secure: true, domain: ".thegerado.com", path: "/", });
+        res.clearCookie("token", { httpOnly: true, sameSite: "none", secure: true, domain: ".vibrantflight.in", path: "/", });
         return res.status(200).json({});
     }
     catch (err) {

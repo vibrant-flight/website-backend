@@ -16,7 +16,7 @@ async function sendOTP(email, otp) {
         }
     });
     const mailOptions = {
-        from: `"Gerado" <${config_1.default.GMAIL_USER}>`,
+        from: `"Vibrant" <${config_1.default.GMAIL_USER}>`,
         to: email,
         subject: 'Your OTP Code',
         text: `Your OTP for Registration is: ${otp}`,
@@ -33,7 +33,7 @@ async function sendResetOTP(email, otp) {
         }
     });
     const mailOptions = {
-        from: `"Gerado" <${config_1.default.GMAIL_USER}>`,
+        from: `"Vibrant" <${config_1.default.GMAIL_USER}>`,
         to: email,
         subject: 'Your OTP Code',
         text: `Your OTP to reset password is: ${otp}`,

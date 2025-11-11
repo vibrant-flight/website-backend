@@ -39,13 +39,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const CartItemSchema_1 = __importDefault(require("../cart/CartItemSchema"));
 const orderSchema = new mongoose_1.Schema({
-    userName: { type: String, required: true },
+    email: { type: String, required: true },
     orderId: { type: String, required: true },
     paymentId: { type: String, required: false },
     items: { type: [CartItemSchema_1.default], required: true },
     mobile: { type: Number, require: true },
     trackingId: { type: String, require: false, default: "" },
     address: { type: String, require: true },
+    pinCode: { type: Number, required: true },
     amount: { type: Number, required: true },
     status: { type: String, enum: ["captured", "dispatched", "failed", "cancelled"], require: true },
 });

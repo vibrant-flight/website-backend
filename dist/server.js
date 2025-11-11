@@ -16,7 +16,7 @@ const app = (0, express_1.default)();
 app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.json({ limit: "2mb" }));
 app.use((0, cors_1.default)({
-    origin: ["https://thegerado.com", "https://www.thegerado.com"],
+    origin: ["https://vibrantflight.in", "https://www.vibrantflight.in"],
     credentials: true,
 }));
 app.use("/api/users", UserRouter_1.default);
@@ -56,9 +56,6 @@ app.get("/get-items", async (req, res) => {
             price: e.price,
             actualPrice: e.actualPrice,
             description: e.description,
-            washcare: e.washcare,
-            details: e.details,
-            specifications: e.specifications,
             category: e.category,
             image: `data:image/webp;base64,${e.image.toString("base64")}`,
             image1: `data:image/webp;base64,${e.image1.toString("base64")}`,
@@ -91,9 +88,6 @@ app.get("/api/items/:ItemID", async (req, res) => {
                 price: items.price,
                 actualPrice: items.actualPrice,
                 description: items.description,
-                washcare: items.washcare,
-                details: items.details,
-                specifications: items.specifications,
                 category: items.category,
                 image: `data:image/webp;base64,${items.image.toString("base64")}`,
                 image1: `data:image/webp;base64,${items.image1.toString("base64")}`,

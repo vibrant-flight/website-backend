@@ -14,7 +14,7 @@ const app:express.Application = express();
 app.use(cookieParser());
 app.use(express.json({ limit: "2mb" }));
 app.use(cors({
-  origin: ["http://localhost:3000"],
+  origin: ["https://vibrantflight.in","https://www.vibrantflight.in"],
   credentials: true,
 }));
 app.use("/api/users",UserRouter);

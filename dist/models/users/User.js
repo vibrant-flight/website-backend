@@ -8,7 +8,6 @@ let userSchema = new mongoose_1.default.Schema({
     firstName: { type: String, require: true },
     lastName: { type: String, require: true },
     email: { type: String, require: true, unique: true },
-    userName: { type: String, require: true, unique: true },
     password: { type: String, require: true },
     lastLogIn: { type: Date },
     isAdmin: { type: Boolean, default: false },

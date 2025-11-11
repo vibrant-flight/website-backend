@@ -17,14 +17,11 @@ const itemSchema = new mongoose_1.default.Schema({
     price: { type: Number, required: true },
     actualPrice: { type: Number, require: true },
     description: { type: String, require: true },
-    washcare: { type: String, require: true },
-    details: { type: String, require: true },
-    specifications: { type: String, require: true },
     image: { type: Buffer, required: true },
     image1: { type: Buffer, required: true },
     image2: { type: Buffer, required: true },
     image3: { type: Buffer, required: true },
-    category: { type: String, enum: ["overtees", "hoodies", "sweat shirt"] },
+    category: { type: String, enum: ["tshirts", "shirts", "sweatshirts", "hoodies", "overtees"] },
     fabric: { type: String }
 });
 exports.default = mongoose_1.default.model("items", itemSchema);

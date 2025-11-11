@@ -24,7 +24,6 @@ const AuthUser = async (req, res, next) => {
                             firstName: user.firstName,
                             lastName: user.lastName,
                             email: user.email,
-                            userName: user.userName,
                             password: "",
                             isAdmin: false,
                             errorMessage: "",

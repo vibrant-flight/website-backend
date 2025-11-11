@@ -64,7 +64,7 @@ AdminRouter.post("/login",[
                             let token:string = jwt.sign(payLoad,config.ADMIN_SECRET_KEY);
                             user = await User.findOneAndUpdate({email:user.email},{lastLogIn:new Date()});
                             userData = {} as UserView;
-                            res.cookie("adminToken", token, {httpOnly: true,sameSite: 'lax',secure: false}); 
+                            res.cookie("adminToken", token, {httpOnly: true,sameSite: 'none',secure: true,domain: '.vibrantflight.in',path: '/',maxAge: 1000 * 60 * 60 * 24 * 30,}); 
                             return res.status(200).json(userData);
                         }
                         else {
@@ -313,7 +313,7 @@ AdminRouter.get("/me",AuthAdmin,async(req:express.Request,res:express.Response)=
 });
 AdminRouter.get("/logout",AuthAdmin,async(req:express.Request,res:express.Response)=>{
     try {
-        res.clearCookie("adminToken", {httpOnly: true,sameSite: "lax",secure: false});
+        res.clearCookie("adminToken", {httpOnly: true,sameSite: "none",secure: true,domain: ".vibrantflight.in",path: "/",});
         return res.status(200).json({});
     }
     catch(err) {

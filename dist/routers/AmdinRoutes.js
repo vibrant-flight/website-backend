@@ -14,14 +14,13 @@ const Item_1 = __importDefault(require("../models/items/Item"));
 const Order_1 = __importDefault(require("../models/orders/Order"));
 const AdminRouter = express_1.default.Router();
 AdminRouter.post("/login", [
-    (0, express_validator_1.body)("userName").not().isEmpty().withMessage("User Name can not left empty"),
+    (0, express_validator_1.body)("email").not().isEmpty().withMessage("User Name can not left empty"),
     (0, express_validator_1.body)("password").not().isEmpty().withMessage("Password can not left empty"),
 ], async (req, res) => {
     let userData = {
         firstName: "",
         lastName: "",
-        email: "",
-        userName: req.body.userName,
+        email: req.body.email,
         password: req.body.password,
         errorMessage: "",
         isAdmin: false,
@@ -36,6 +35,7 @@ AdminRouter.post("/login", [
             return res.status(400).json(userData);
         }
         else {
+            userData.email.toLowerCase();
             let token = await req.cookies["token"];
             let adminToken = await req.cookies["adminToken"];
             if (token || adminToken) {
@@ -44,7 +44,7 @@ AdminRouter.post("/login", [
                 return res.status(400).json(userData);
             }
             else {
-                let user = await User_1.default.findOne({ $or: [{ userName: userData.userName }, { email: userData.userName }] });
+                let user = await User_1.default.findOne({ email: userData.email });
                 if (user) {
                     if (await bcryptjs_1.default.compare(userData.password, user.password)) {
                         let payLoad = {
@@ -59,9 +59,9 @@ AdminRouter.post("/login", [
                         }
                         if (config_1.default.ADMIN_SECRET_KEY) {
                             let token = jsonwebtoken_1.default.sign(payLoad, config_1.default.ADMIN_SECRET_KEY);
-                            user = await User_1.default.findOneAndUpdate({ userName: user.userName }, { lastLogIn: new Date() });
+                            user = await User_1.default.findOneAndUpdate({ email: user.email }, { lastLogIn: new Date() });
                             userData = {};
-                            res.cookie("adminToken", token, { httpOnly: true, sameSite: 'none', secure: true, domain: '.thegerado.com', path: '/', maxAge: 1000 * 60 * 60 * 24 * 30, });
+                            res.cookie("adminToken", token, { httpOnly: true, sameSite: 'none', secure: true, domain: '.vibrantflight.in', path: '/', maxAge: 1000 * 60 * 60 * 24 * 30, });
                             return res.status(200).json(userData);
                         }
                         else {
@@ -78,7 +78,7 @@ AdminRouter.post("/login", [
                 }
                 else {
                     userData = {};
-                    userData.errorMessage = "Username or email dose not exist";
+                    userData.errorMessage = "email dose not exist";
                     return res.status(400).json(userData);
                 }
             }
@@ -95,7 +95,7 @@ AdminRouter.get('/orders', AuthAdmin_1.default, async (req, res) => {
             return res.status(200).json([]);
         }
         const ordersData = orders.map(order => ({
-            userName: order.userName,
+            email: order.email,
             orderId: order.orderId,
             paymentId: order.paymentId,
             items: order.items.map(item => ({
@@ -104,6 +104,7 @@ AdminRouter.get('/orders', AuthAdmin_1.default, async (req, res) => {
             })),
             amount: order.amount,
             trackingId: order.trackingId,
+            pinCode: order.pinCode,
             status: order.status,
             mobile: order.mobile,
             address: order.address
@@ -155,7 +156,7 @@ AdminRouter.patch("/cancel-order", AuthAdmin_1.default, async (req, res) => {
         return res.status(500).json({ errorMessage: "Internal server error" });
     }
 });
-AdminRouter.post("/upload", AuthAdmin_1.default, (0, express_validator_1.body)("name").not().isEmpty().withMessage("Name can not left empty"), (0, express_validator_1.body)("price").not().isEmpty().withMessage("Price can not left empty"), (0, express_validator_1.body)("actualPrice").not().isEmpty().withMessage("Need to enter actual price"), (0, express_validator_1.body)("image").not().isEmpty().withMessage("Imaage can not left can not left empty"), async (req, res) => {
+AdminRouter.post("/add-product", AuthAdmin_1.default, (0, express_validator_1.body)("name").not().isEmpty().withMessage("Name can not left empty"), (0, express_validator_1.body)("price").not().isEmpty().withMessage("Price can not left empty"), (0, express_validator_1.body)("actualPrice").not().isEmpty().withMessage("Need to enter actual price"), (0, express_validator_1.body)("image").not().isEmpty().withMessage("Imaage can not left empty"), async (req, res) => {
     try {
         let itemData = {
             itemId: '',
@@ -171,9 +172,6 @@ AdminRouter.post("/upload", AuthAdmin_1.default, (0, express_validator_1.body)("
             actualPrice: req.body.actualPrice,
             price: req.body.price,
             description: req.body.description,
-            washcare: req.body.washcare,
-            details: req.body.details,
-            specifications: req.body.specifications,
             category: req.body.category,
             image: req.body.image,
             image1: req.body.image1,
@@ -273,9 +271,6 @@ AdminRouter.get("/items-list", AuthAdmin_1.default, async (req, res) => {
             actualPrice: e.actualPrice,
             price: e.price,
             description: e.description,
-            washcare: e.washcare,
-            details: e.details,
-            specifications: e.specifications,
             category: e.category,
             image: `data:image/webp;base64,${e.image.toString("base64")}`,
             image1: `data:image/webp;base64,${e.image1.toString("base64")}`,
@@ -301,7 +296,7 @@ AdminRouter.get("/me", AuthAdmin_1.default, async (req, res) => {
 });
 AdminRouter.get("/logout", AuthAdmin_1.default, async (req, res) => {
     try {
-        res.clearCookie("adminToken", { httpOnly: true, sameSite: "none", secure: true, domain: ".thegerado.com", path: "/", });
+        res.clearCookie("adminToken", { httpOnly: true, sameSite: "none", secure: true, domain: ".vibrantflight.in", path: "/", });
         return res.status(200).json({});
     }
     catch (err) {
