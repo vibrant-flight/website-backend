@@ -30,7 +30,7 @@ CartRouter.post("/add-to-cart", AuthUser_1.default, async (req, res) => {
         }
         let cart = await Cart_1.default.findOne({ email });
         if (!cart) {
-            cart = new Cart_1.default({ email, items: [{ itemId, price: item.price, selectedSize, quantity, image: item.image }] });
+            cart = new Cart_1.default({ email, items: [{ itemId, price: item.price, name: item.name, selectedSize, quantity, image: item.image }] });
         }
         else {
             const existingItem = cart.items.find(i => i.itemId.toString() === itemId && i.selectedSize === selectedSize);
@@ -47,7 +47,7 @@ CartRouter.post("/add-to-cart", AuthUser_1.default, async (req, res) => {
                 }
             }
             else {
-                cart.items.push({ itemId, price: item.price, selectedSize, quantity, image: item.image });
+                cart.items.push({ itemId, price: item.price, name: item.name, selectedSize, quantity, image: item.image });
             }
         }
         await cart.save();
@@ -55,6 +55,7 @@ CartRouter.post("/add-to-cart", AuthUser_1.default, async (req, res) => {
             email: cart.email,
             items: cart.items.map(i => ({
                 itemId: i.itemId,
+                name: i.name,
                 price: i.price,
                 selectedSize: i.selectedSize,
                 quantity: i.quantity,
@@ -73,31 +74,23 @@ CartRouter.get("/get-cart-items", AuthUser_1.default, async (req, res) => {
         let cart = await Cart_1.default.findOne({ email: email }).lean();
         if (cart) {
             if (cart.items && cart.items.length > 0) {
-                const validItemIds = cart.items
-                    .map(i => String(i.itemId))
-                    .filter(id => mongoose_1.default.Types.ObjectId.isValid(id))
-                    .map(id => new mongoose_1.default.Types.ObjectId(id));
-                const existingItems = validItemIds.length
-                    ? await Item_1.default.find({ _id: { $in: validItemIds } }).lean()
-                    : [];
+                const validItemIds = cart.items.map(i => String(i.itemId)).filter(id => mongoose_1.default.Types.ObjectId.isValid(id)).map(id => new mongoose_1.default.Types.ObjectId(id));
+                const existingItems = validItemIds.length ? await Item_1.default.find({ _id: { $in: validItemIds } }).lean() : [];
                 const existingMap = new Map(existingItems.map(e => [String(e._id), e]));
                 const existingIdSet = new Set(existingItems.map(e => String(e._id)));
                 let toRemove = [];
                 for (const cartItem of cart.items) {
                     const itemIdStr = String(cartItem.itemId);
-                    // ✅ Item missing from DB
                     if (!existingIdSet.has(itemIdStr)) {
                         toRemove.push(cartItem);
                         continue;
                     }
                     const dbItem = existingMap.get(itemIdStr);
                     const size = cartItem.selectedSize;
-                    // ✅ Size not present OR size stock = 0
                     if (!dbItem?.size || dbItem.size[size] === undefined || dbItem.size[size] <= 0) {
                         toRemove.push(cartItem);
                         continue;
                     }
-                    // ✅ NEW: quantity exceeds available stock
                     if (cartItem.quantity > dbItem.size[size]) {
                         toRemove.push(cartItem);
                         continue;
@@ -117,6 +110,7 @@ CartRouter.get("/get-cart-items", AuthUser_1.default, async (req, res) => {
                 email: cart.email,
                 items: cart.items.map(i => ({
                     itemId: i.itemId,
+                    name: i.name,
                     price: i.price,
                     selectedSize: i.selectedSize,
                     quantity: i.quantity,
