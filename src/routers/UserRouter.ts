@@ -47,6 +47,7 @@ UserRouter.post("/register",[
                 return res.status(400).json(userData);
             }
             else {
+                if(userData.email) userData.email = userData.email.toLowerCase();
                 let user:IUser | null = await User.findOne({email:userData.email});
                 if(user) {
                     userData = {} as UserView;
@@ -106,7 +107,7 @@ UserRouter.post("/login",[
                 return res.status(400).json(userData);
             }
             else {
-                if (userData.email) userData.email = userData.email.toLowerCase();
+                if(userData.email) userData.email = userData.email.toLowerCase();
                 let user:IUser | null = await User.findOne({ email: userData.email});
                 if(user) {
                     if(await bcrypt.compare(userData.password,user.password)) {

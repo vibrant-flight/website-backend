@@ -46,6 +46,8 @@ UserRouter.post("/register", [
                 return res.status(400).json(userData);
             }
             else {
+                if (userData.email)
+                    userData.email = userData.email.toLowerCase();
                 let user = await User_1.default.findOne({ email: userData.email });
                 if (user) {
                     userData = {};

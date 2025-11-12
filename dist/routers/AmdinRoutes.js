@@ -35,7 +35,8 @@ AdminRouter.post("/login", [
             return res.status(400).json(userData);
         }
         else {
-            userData.email.toLowerCase();
+            if (userData.email)
+                userData.email = userData.email.toLowerCase();
             let token = await req.cookies["token"];
             let adminToken = await req.cookies["adminToken"];
             if (token || adminToken) {
