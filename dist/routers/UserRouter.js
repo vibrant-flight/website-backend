@@ -13,6 +13,8 @@ const AuthUser_1 = __importDefault(require("../middleWare/AuthUser"));
 const mailer_1 = require("../utilities/mailer");
 const OTP_1 = __importDefault(require("../models/otp/OTP"));
 const Order_1 = __importDefault(require("../models/orders/Order"));
+const ProductClick_1 = __importDefault(require("../models/ProductClicks/ProductClick"));
+const mongoose_1 = __importDefault(require("mongoose"));
 const UserRouter = express_1.default.Router();
 UserRouter.post("/register", [
     (0, express_validator_1.body)("firstName").not().isEmpty().withMessage("First Name can not left empty"),
@@ -346,6 +348,48 @@ UserRouter.patch("/reset-password", async (req, res) => {
     }
     catch (err) {
         return res.status(500).json({ error: err });
+    }
+});
+UserRouter.post("/track/product-click", async (req, res) => {
+    try {
+        const { productId, email } = req.body;
+        const ipAddress = (typeof req.headers["x-forwarded-for"] === "string"
+            ? req.headers["x-forwarded-for"].split(",")[0]
+            : Array.isArray(req.headers["x-forwarded-for"])
+                ? req.headers["x-forwarded-for"][0]
+                : undefined) || req.socket.remoteAddress;
+        if (!mongoose_1.default.Types.ObjectId.isValid(productId)) {
+            return res.status(400).json({ error: "Invalid productId" });
+        }
+        const clickData = {
+            productId: new mongoose_1.default.Types.ObjectId(productId),
+            email: email || "guest",
+            ipAddress: ipAddress || "",
+            clickedAt: new Date(),
+            errorMessage: "",
+        };
+        if (clickData.email !== "guest") {
+            const existing = await ProductClick_1.default.findOne({
+                email: clickData.email,
+                productId: clickData.productId,
+            });
+            if (!existing) {
+                await ProductClick_1.default.create(clickData);
+            }
+        }
+        else if (clickData.ipAddress && clickData.ipAddress !== "::1") {
+            const existing = await ProductClick_1.default.findOne({
+                ipAddress: clickData.ipAddress,
+                productId: clickData.productId,
+            });
+            if (!existing) {
+                await ProductClick_1.default.create(clickData);
+            }
+        }
+        return res.status(200).json({ success: true });
+    }
+    catch (err) {
+        return res.status(500).json("Analytical error");
     }
 });
 exports.default = UserRouter;
