@@ -10,6 +10,8 @@ import CartRouter from "./routers/CartRouter";
 import { ItemView } from "./models/items/itemView";
 import { Types } from "mongoose";
 import { IItem } from "./models/items/IITems";
+import { IProductClick } from "./models/ProductClicks/IProductClick";
+import ProductClick from "./models/ProductClicks/ProductClick";
 const app:express.Application = express();
 app.use(cookieParser());
 app.use(express.json({ limit: "2mb" }));
@@ -17,6 +19,21 @@ app.use(cors({
   origin: ["https://vibrantflight.in","https://www.vibrantflight.in"],
   credentials: true,
 }));
+app.set("trust proxy", true);
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (!origin) {
+    return res.status(403).end();
+  }
+
+  if (origin !== "https://vibrantflight.in" || "https://www.vibrantflight.in")
+  {
+    return res.status(403).end();
+  }
+
+  next();
+});
 app.use("/api/users",UserRouter);
 app.use("/api/admins",AdminRouter);
 app.use("/api/cart",CartRouter);
@@ -66,6 +83,64 @@ app.get("/get-items", async (req: express.Request, res: express.Response) => {
         return res.status(500).json(err);
     }
 });
+app.post("/items/suggested", async (req, res) => {
+    try {
+        const { email, limit = 4 } = req.body;
+        const ipAddress = ((req.headers["x-forwarded-for"] as string)?.split(",")[0] || req.socket.remoteAddress ||"").replace("::ffff:", "");
+        let clickQuery;
+        if(email && email !== "guest") {
+            clickQuery = { email };
+        }
+        else {
+            clickQuery = { ipAddress };
+        }
+        const clicks = await ProductClick.find(clickQuery).select("productId").lean();
+        const clickedObjectIds = clicks.map(c =>
+            Types.ObjectId.isValid(c.productId.toString())
+            ? new Types.ObjectId(c.productId.toString())
+            : null
+        ).filter(Boolean);
+        console.log("Clicks:", clicks.length);
+        console.log("Valid ObjectIds:", clickedObjectIds.length);
+        if (!clickedObjectIds.length) {
+            return res.json({
+                products: [],
+                reason: "no-clicks"
+            });
+        }
+        const products = await Item.find({_id: { $in: clickedObjectIds }}).sort({ _id: -1 }).limit(limit).lean();
+        return res.json({
+            products: mapItems(products),
+            reason: "clicked-only"
+        });
+    } 
+    catch (err) {
+        return res.status(500).json({ error: "Server error" });
+    }
+});
+
+function mapItems(items: any[]) {
+  return items.map(e => ({
+    itemId: e._id,
+    name: e.name,
+    size: {
+        S: e.size.S,
+        M: e.size.M,
+        L: e.size.L,
+        XL: e.size.XL,
+        XXL: e.size.XXL,
+        XXXL: e.size.XXXL
+        },
+    price: e.price,
+    actualPrice: e.actualPrice,
+    category: e.category,
+    image: `data:image/webp;base64,${e.image.toString("base64")}`,
+    image1: `data:image/webp;base64,${e.image1.toString("base64")}`,
+    image2: `data:image/webp;base64,${e.image2.toString("base64")}`,
+    image3: `data:image/webp;base64,${e.image3.toString("base64")}`,
+    fabric: e.fabric
+  }));
+}
 app.get("/api/items/:ItemID",async(req:express.Request,res:express.Response)=>{
     try {
         const items:IItem | null = await Item.findById(req.params.ItemID);
