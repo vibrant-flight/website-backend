@@ -232,7 +232,7 @@ CartRouter.post("/verify-payment", async (req, res) => {
         }
         const cart = await Cart_1.default.findOne({ email });
         const items = cart?.items || [];
-        const amount = items.reduce((sum, item) => sum + item.price * item.quantity, 0) + 50;
+        const amount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
         await Order_1.default.create({
             email,
             orderId: order_id,
@@ -278,7 +278,7 @@ CartRouter.post("/place-cod-order", AuthUser_1.default, async (req, res) => {
             pinCode,
             paymentMode: "COD",
             items,
-            amount: items.reduce((sum, item) => sum + item.price * item.quantity, 0) + 50,
+            amount: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
             status: "captured",
         });
         for (const item of items) {

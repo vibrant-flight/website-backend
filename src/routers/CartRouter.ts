@@ -235,7 +235,7 @@ CartRouter.post("/verify-payment", async (req, res) => {
         }
         const cart = await Cart.findOne({ email });
         const items = cart?.items || [];
-        const amount = items.reduce((sum, item) => sum + item.price * item.quantity, 0) + 50;
+        const amount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
         await Order.create({
             email,
             orderId: order_id,
@@ -281,7 +281,7 @@ CartRouter.post("/place-cod-order",AuthUser,async(req:express.Request,res:expres
             pinCode,
             paymentMode: "COD",
             items,
-            amount: items.reduce((sum, item) => sum + item.price * item.quantity, 0)+50,
+            amount: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
             status: "captured",
         });
         for (const item of items) {
