@@ -22,16 +22,13 @@ app.use(cors({
 app.set("trust proxy", true);
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-
-  if (!origin) {
+  if(!origin) {
     return res.status(403).end();
   }
-
-  if (origin !== "https://vibrantflight.in" || "https://www.vibrantflight.in")
+  if(origin !== "https://vibrantflight.in" || "https://www.vibrantflight.in")
   {
     return res.status(403).end();
   }
-
   next();
 });
 app.use("/api/users",UserRouter);
