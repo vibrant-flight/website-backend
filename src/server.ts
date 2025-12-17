@@ -22,15 +22,19 @@ app.use(cors({
 app.set("trust proxy", true);
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+  const allowedOrigins = [
+    "https://vibrantflight.in",
+    "https://www.vibrantflight.in",
+  ];
   if(!origin) {
-    return res.status(403).end();
+    return res.status(403).json({ message: "Origin missing" });
   }
-  if(origin !== "https://vibrantflight.in" || "https://www.vibrantflight.in")
-  {
-    return res.status(403).end();
+  if(!allowedOrigins.includes(origin)) {
+    return res.status(403).json({ message: "Origin not allowed" });
   }
   next();
 });
+
 app.use("/api/users",UserRouter);
 app.use("/api/admins",AdminRouter);
 app.use("/api/cart",CartRouter);
