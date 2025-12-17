@@ -10,31 +10,29 @@ import CartRouter from "./routers/CartRouter";
 import { ItemView } from "./models/items/itemView";
 import { Types } from "mongoose";
 import { IItem } from "./models/items/IITems";
-import { IProductClick } from "./models/ProductClicks/IProductClick";
 import ProductClick from "./models/ProductClicks/ProductClick";
 const app:express.Application = express();
 app.use(cookieParser());
 app.use(express.json({ limit: "2mb" }));
 app.use(cors({
-  origin: ["https://vibrantflight.in","https://www.vibrantflight.in"],
+  origin: ["http://localhost:3000"],
   credentials: true,
 }));
-app.set("trust proxy", true);
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  const allowedOrigins = [
-    "https://vibrantflight.in",
-    "https://www.vibrantflight.in",
-  ];
-  if(!origin) {
-    return res.status(403).json({ message: "Origin missing" });
-  }
-  if(!allowedOrigins.includes(origin)) {
-    return res.status(403).json({ message: "Origin not allowed" });
-  }
-  next();
-});
-
+// app.set("trust proxy", true);
+// app.use((req, res, next) => {
+//   const origin = req.headers.origin;
+//   const allowedOrigins = [
+//     "https://vibrantflight.in",
+//     "https://www.vibrantflight.in",
+//   ];
+//   if(!origin) {
+//     return res.status(403).json({ message: "Origin missing" });
+//   }
+//   if(!allowedOrigins.includes(origin)) {
+//     return res.status(403).json({ message: "Origin not allowed" });
+//   }
+//   next();
+// });
 app.use("/api/users",UserRouter);
 app.use("/api/admins",AdminRouter);
 app.use("/api/cart",CartRouter);
@@ -101,8 +99,6 @@ app.post("/items/suggested", async (req, res) => {
             ? new Types.ObjectId(c.productId.toString())
             : null
         ).filter(Boolean);
-        console.log("Clicks:", clicks.length);
-        console.log("Valid ObjectIds:", clickedObjectIds.length);
         if (!clickedObjectIds.length) {
             return res.json({
                 products: [],

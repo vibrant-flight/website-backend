@@ -353,10 +353,10 @@ UserRouter.patch("/reset-password", async (req, res) => {
 const getClientIp = (req) => {
     const forwarded = req.headers["x-forwarded-for"];
     if (forwarded) {
-        const forwardedString = typeof forwarded === "string" ? forwarded : forwarded[0];
+        const forwardedString = Array.isArray(forwarded) ? forwarded[0] : forwarded;
         return forwardedString.split(",")[0].trim();
     }
-    return req.socket.remoteAddress?.replace("::ffff:", "");
+    return req.ip;
 };
 UserRouter.post("/track/product-click", async (req, res) => {
     try {
