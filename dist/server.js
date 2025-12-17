@@ -18,24 +18,24 @@ const app = (0, express_1.default)();
 app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.json({ limit: "2mb" }));
 app.use((0, cors_1.default)({
-    origin: ["http://localhost:3000"],
+    origin: ["https://vibrantflight.in", "https://www.vibrantflight.in"],
     credentials: true,
 }));
-// app.set("trust proxy", true);
-// app.use((req, res, next) => {
-//   const origin = req.headers.origin;
-//   const allowedOrigins = [
-//     "https://vibrantflight.in",
-//     "https://www.vibrantflight.in",
-//   ];
-//   if(!origin) {
-//     return res.status(403).json({ message: "Origin missing" });
-//   }
-//   if(!allowedOrigins.includes(origin)) {
-//     return res.status(403).json({ message: "Origin not allowed" });
-//   }
-//   next();
-// });
+app.set("trust proxy", true);
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    const allowedOrigins = [
+        "https://vibrantflight.in",
+        "https://www.vibrantflight.in",
+    ];
+    if (!origin) {
+        return res.status(403).json({ message: "Origin missing" });
+    }
+    if (!allowedOrigins.includes(origin)) {
+        return res.status(403).json({ message: "Origin not allowed" });
+    }
+    next();
+});
 app.use("/api/users", UserRouter_1.default);
 app.use("/api/admins", AmdinRoutes_1.default);
 app.use("/api/cart", CartRouter_1.default);
