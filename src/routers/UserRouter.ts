@@ -352,15 +352,19 @@ UserRouter.patch("/reset-password",async(req:express.Request,res:express.Respons
     catch(err) {
         return res.status(500).json({error:err});
     }
-});UserRouter.post("/track/product-click", async (req, res) => {
+});
+const getClientIp = (req:express.Request) => {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (forwarded) {
+    const forwardedString = typeof forwarded === "string" ? forwarded : forwarded[0];
+    return forwardedString.split(",")[0].trim();
+  }
+  return req.socket.remoteAddress?.replace("::ffff:", "");
+};
+UserRouter.post("/track/product-click", async (req, res) => {
     try {
         const { productId, email } = req.body;
-        const ipAddress =
-        (typeof req.headers["x-forwarded-for"] === "string"
-            ? req.headers["x-forwarded-for"].split(",")[0]
-            : Array.isArray(req.headers["x-forwarded-for"])
-            ? req.headers["x-forwarded-for"][0]
-            : undefined) || req.socket.remoteAddress;
+        const ipAddress = getClientIp(req);
         if(!mongoose.Types.ObjectId.isValid(productId)) {
             return res.status(400).json({ error: "Invalid productId" });
         }
