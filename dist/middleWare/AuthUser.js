@@ -52,7 +52,7 @@ const AuthUser = async (req, res, next) => {
         else {
             userData = {};
             userData.errorMessage = "You have not logedin";
-            return res.status(401).json({ ...userData, loginStatus: false });
+            return res.status(401).json(userData);
         }
     }
     catch (err) {
