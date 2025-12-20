@@ -373,19 +373,13 @@ UserRouter.post("/track/product-click", async (req, res) => {
             errorMessage: "",
         };
         if (clickData.email !== "guest") {
-            const existing = await ProductClick_1.default.findOne({
-                email: clickData.email,
-                productId: clickData.productId,
-            });
+            const existing = await ProductClick_1.default.findOneAndUpdate({ email: clickData.email, productId: clickData.productId, }, { clickedAt: new Date() });
             if (!existing) {
                 await ProductClick_1.default.create(clickData);
             }
         }
         else if (clickData.ipAddress && clickData.ipAddress !== "::1") {
-            const existing = await ProductClick_1.default.findOne({
-                ipAddress: clickData.ipAddress,
-                productId: clickData.productId,
-            });
+            const existing = await ProductClick_1.default.findOneAndUpdate({ ipAddress: clickData.ipAddress, productId: clickData.productId }, { clickedAt: new Date() });
             if (!existing) {
                 await ProductClick_1.default.create(clickData);
             }
