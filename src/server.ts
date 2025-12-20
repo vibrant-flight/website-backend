@@ -87,15 +87,15 @@ app.post("/items/suggested", async (req, res) => {
         const { email, limit = 4 } = req.body;
         const ipAddress = ((req.headers["x-forwarded-for"] as string)?.split(",")[0] || req.socket.remoteAddress || "").replace("::ffff:", "");
         const clickQuery = email && email !== "guest" ? { email } : { ipAddress };
-        const clicks = await ProductClick.find(clickQuery).sort({ clickedAt: -1 }).limit(20).select("productId").lean();
+        const clicks = await ProductClick.find(clickQuery).sort({ clickedAt: -1 }).limit(limit).select("productId").lean();
         if(!clicks.length) {
             return res.json({ products: [], reason: "no-clicks" });
         }
-        const clickedIds = [
-            ...new Set(clicks.map(c => c.productId.toString()))
-        ].map(id => new Types.ObjectId(id));
-        const products = await Item.find({ _id: { $in: clickedIds } }).limit(limit).lean();
-        return res.json({products: mapItems(products),reason: "clicked-only"});
+        const clickedIds = [...new Set(clicks.map(c => c.productId.toString()))];
+        const products = await Item.find({_id: { $in: clickedIds }}).lean();
+        const productMap = new Map(products.map(p => [p._id.toString(), p]));
+        const orderedProducts = clickedIds.map(id => productMap.get(id)).filter(Boolean);
+        return res.json({products: mapItems(orderedProducts), reason:"clicked-only"});
     } 
     catch (err) {
         return res.status(500).json({ error: "Server error" });
