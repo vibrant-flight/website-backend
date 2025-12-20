@@ -85,37 +85,22 @@ app.get("/get-items", async (req: express.Request, res: express.Response) => {
 app.post("/items/suggested", async (req, res) => {
     try {
         const { email, limit = 4 } = req.body;
-        const ipAddress = ((req.headers["x-forwarded-for"] as string)?.split(",")[0] || req.socket.remoteAddress ||"").replace("::ffff:", "");
-        let clickQuery;
-        if(email && email !== "guest") {
-            clickQuery = { email };
+        const ipAddress = ((req.headers["x-forwarded-for"] as string)?.split(",")[0] || req.socket.remoteAddress || "").replace("::ffff:", "");
+        const clickQuery = email && email !== "guest" ? { email } : { ipAddress };
+        const clicks = await ProductClick.find(clickQuery).sort({ clickedAt: -1 }).limit(20).select("productId").lean();
+        if(!clicks.length) {
+            return res.json({ products: [], reason: "no-clicks" });
         }
-        else {
-            clickQuery = { ipAddress };
-        }
-        const clicks = await ProductClick.find(clickQuery).select("productId").lean();
-        const clickedObjectIds = clicks.map(c =>
-            Types.ObjectId.isValid(c.productId.toString())
-            ? new Types.ObjectId(c.productId.toString())
-            : null
-        ).filter(Boolean);
-        if (!clickedObjectIds.length) {
-            return res.json({
-                products: [],
-                reason: "no-clicks"
-            });
-        }
-        const products = await Item.find({_id: { $in: clickedObjectIds }}).sort({ _id: -1 }).limit(limit).lean();
-        return res.json({
-            products: mapItems(products),
-            reason: "clicked-only"
-        });
+        const clickedIds = [
+            ...new Set(clicks.map(c => c.productId.toString()))
+        ].map(id => new Types.ObjectId(id));
+        const products = await Item.find({ _id: { $in: clickedIds } }).limit(limit).lean();
+        return res.json({products: mapItems(products),reason: "clicked-only"});
     } 
     catch (err) {
         return res.status(500).json({ error: "Server error" });
     }
 });
-
 function mapItems(items: any[]) {
   return items.map(e => ({
     itemId: e._id,
