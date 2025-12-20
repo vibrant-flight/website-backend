@@ -84,15 +84,15 @@ app.get("/get-items", async (req: express.Request, res: express.Response) => {
 });
 app.post("/items/suggested", async (req, res) => {
     try {
-        const { email, limit = 4 } = req.body;
+        const { email } = req.body;
         const ipAddress = ((req.headers["x-forwarded-for"] as string)?.split(",")[0] || req.socket.remoteAddress || "").replace("::ffff:", "");
         const clickQuery = email && email !== "guest" ? { email } : { ipAddress };
-        const clicks = await ProductClick.find(clickQuery).sort({ clickedAt: -1 }).limit(limit).select("productId").lean();
+        const clicks = await ProductClick.find(clickQuery).sort({ clickedAt: -1 }).limit(4).select("productId").lean();
         if(!clicks.length) {
             return res.json({ products: [], reason: "no-clicks" });
         }
         const clickedIds = [...new Set(clicks.map(c => c.productId.toString()))];
-        const products = await Item.find({_id: { $in: clickedIds }}).lean();
+        const products = await Item.find({_id: { $in: clickedIds }}).sort({ _id: -1 }).limit(4).select("itemId name price actualPrice image category fabric size").lean();
         const productMap = new Map(products.map(p => [p._id.toString(), p]));
         const orderedProducts = clickedIds.map(id => productMap.get(id)).filter(Boolean);
         return res.json({products: mapItems(orderedProducts), reason:"clicked-only"});
@@ -117,9 +117,9 @@ function mapItems(items: any[]) {
     actualPrice: e.actualPrice,
     category: e.category,
     image: `data:image/webp;base64,${e.image.toString("base64")}`,
-    image1: `data:image/webp;base64,${e.image1.toString("base64")}`,
-    image2: `data:image/webp;base64,${e.image2.toString("base64")}`,
-    image3: `data:image/webp;base64,${e.image3.toString("base64")}`,
+    image1: ``,
+    image2: ``,
+    image3: ``,
     fabric: e.fabric
   }));
 }
