@@ -54,7 +54,7 @@ app.get("/get-items", async (req: express.Request, res: express.Response) => {
         const category = req.query.category as string;
         const filter: any = {};
         if (category) filter.category = category;
-        const items = await Item.find(filter).sort({ _id: -1 }).skip((page - 1) * 8).limit(8).lean();
+        const items = await Item.find(filter).sort({ _id: -1 }).skip((page - 1) * 10).limit(10).lean();
         const itemsData: ItemView[] = items.map((e) => ({
             itemId: e._id as Types.ObjectId,
             name: e.name,

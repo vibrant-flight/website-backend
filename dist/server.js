@@ -57,7 +57,7 @@ app.get("/get-items", async (req, res) => {
         const filter = {};
         if (category)
             filter.category = category;
-        const items = await Item_1.default.find(filter).sort({ _id: -1 }).skip((page - 1) * 8).limit(8).lean();
+        const items = await Item_1.default.find(filter).sort({ _id: -1 }).skip((page - 1) * 10).limit(10).lean();
         const itemsData = items.map((e) => ({
             itemId: e._id,
             name: e.name,
